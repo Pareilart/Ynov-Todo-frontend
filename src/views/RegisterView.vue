@@ -4,6 +4,16 @@
     
     <form @submit.prevent="handleRegister" class="space-y-6">
       <div>
+        <label for="username" class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+        <input 
+          type="text" 
+          id="name" 
+          v-model="name" 
+          required
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+        >
+      </div>
+      <div>
         <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
         <input 
           type="email" 
@@ -50,19 +60,26 @@
 import { ref } from 'vue'
 import GuestLayout from '@/layouts/GuestLayout.vue'
 import { useToast } from '@/composable/useToast'
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
 const { showToast } = useToast()
-
+const auth = useAuthStore()
+const router = useRouter()
+const name = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 
-const handleRegister = () => {
+const handleRegister = async () => {
   if (password.value !== confirmPassword.value) {
     showToast('Les mots de passe ne correspondent pas', 'error')
     return
   }
-  // Logique d'inscription à implémenter
-  console.log('Register attempt:', { email: email.value, password: password.value })
+  const result = await auth.signup(email.value, password.value, name.value)
+  showToast(result.message, result.success ? 'success' : 'error')
+  if (result.success) {
+    router.push('/login')
+  }
 }
 </script> 

@@ -13,7 +13,7 @@
       class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
     >
     <span :class="{ 'line-through text-gray-500': task.completed }">
-      {{ task.name }}
+      {{ task.title }}
     </span>
     <button 
       @click.stop="handleTaskDelete"
@@ -37,10 +37,11 @@ const props = defineProps<{
   task: Task
 }>();
 
-const handleTaskToggle = () => {
-  kanbanStore.toggleTaskComplete(props.task.id);
+const handleTaskToggle = async () => {
+  const task = await kanbanStore.apiPatchToggleCompletion(props.task.id);
+  console.log(task);
   showToast(
-    props.task.completed ? 'Tâche marquée comme non terminée' : 'Tâche marquée comme terminée',
+    task?.completed ? 'Tâche marquée comme terminée' : 'Tâche marquée comme non terminée',
     'success'
   );
 };

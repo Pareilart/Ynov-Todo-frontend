@@ -1,7 +1,10 @@
 export interface Task {
   id: number;
-  name: string;
+  title: string;
+  status: string;
   completed: boolean;
+  createdAt: string;
+  userId: number;
 }
 
 export interface Column {

@@ -42,10 +42,10 @@ const props = defineProps<{
 const { showToast } = useToast();
 
 const columnColor = computed(() => ({
-  'bg-red-500': props.column.name === 'À faire',
-  'bg-yellow-500': props.column.name === 'En cours',
-  'bg-green-500': props.column.name === 'Terminé',
-  'bg-gray-500': props.column.name === 'Archivé'
+  'bg-red-500': props.column.name === 'EN_ATTENTE',
+  'bg-yellow-500': props.column.name === 'EN_COURS',
+  'bg-green-500': props.column.name === 'TERMINE',
+  'bg-gray-500': props.column.name === 'ARCHIVE'
 }));
 
 const handleChange = (event: any) => {

@@ -43,6 +43,31 @@ export const useAuthStore = defineStore(
       }
     };
 
+    const signup = async (email: string, password: string, name: string) => {
+      try {
+        const {
+          success,
+          data: responseData,
+          message,
+        } = (await post("/api/users/signup", {
+          email,
+          password,
+          name,
+        })) as ResponseApi;
+
+        if (success && responseData) {
+          data.value = responseData as User;
+        }
+
+        return { success, message };
+      } catch (error) {
+        return {
+          success: false,
+          message: error instanceof Error ? error.message : "Erreur inconnue",
+        };
+      }
+    }
+
     const logout = async () => {
       data.value = null;
 
@@ -63,7 +88,7 @@ export const useAuthStore = defineStore(
       return true;
     };
 
-    return { data, login, logout, checkAuth };
+    return { data, login, logout, checkAuth, signup };
   },
   { persist: true }
 );

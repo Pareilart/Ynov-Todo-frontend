@@ -76,6 +76,13 @@ export function useApi(options: ApiOptions = {}) {
     });
   };
 
+  const patch = (endpoint: string, data?: any) => {
+    return fetchData(endpoint, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  };
+
   const del = (endpoint: string) => {
     return fetchData(endpoint, {
       method: "DELETE",
@@ -88,6 +95,7 @@ export function useApi(options: ApiOptions = {}) {
     get,
     post,
     put,
+    patch,
     delete: del,
   };
 }
