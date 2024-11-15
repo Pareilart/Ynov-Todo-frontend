@@ -22,9 +22,7 @@
         </select>
         <button @click="addTask" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center">
           <span class="mr-2">Ajouter</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-          </svg>
+          <font-awesome-icon icon="fa-solid fa-plus" />
         </button>
       </div>
     </div>
@@ -40,14 +38,21 @@ import { ref } from 'vue';
 import type { Column } from '@/types/todo';
 import KanbanComponent from '@/components/Kanban/Kanban.vue'
 import { useKanbanStore } from '@/stores/kanban-todo'
+import { useToast } from '@/composable/useToast.ts'
 
 const kanbanStore = useKanbanStore()
+const { showToast } = useToast()
 const newTask = ref<string>('');
 const selectedColumn = ref<Column | null>(null);
 
 const addTask = (): void => {
-  if (!newTask.value.trim() || !selectedColumn.value) return;
+  if (!newTask.value.trim() || !selectedColumn.value) {
+    showToast('Veuillez remplir tous les champs', 'error');
+    return;
+  }
+  
   kanbanStore.addTask(selectedColumn.value.name, newTask.value);
+  showToast('Tâche ajoutée avec succès', 'success');
   newTask.value = '';
 };
 </script>
