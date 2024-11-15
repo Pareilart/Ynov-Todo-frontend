@@ -38,7 +38,7 @@ import { ref } from 'vue';
 import type { Column } from '@/types/todo';
 import KanbanComponent from '@/components/Kanban/Kanban.vue'
 import { useKanbanStore } from '@/stores/kanban-todo'
-import { useToast } from '@/composable/useToast.ts'
+import { useToast } from '@/composable/useToast'
 
 const kanbanStore = useKanbanStore()
 const { showToast } = useToast()

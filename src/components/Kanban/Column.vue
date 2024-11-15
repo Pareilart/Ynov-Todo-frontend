@@ -8,14 +8,21 @@
       v-model="column.tasks" 
       group="tasks" 
       :move="checkMove" 
-      @change="onChange"
+      @change="handleChange"
       class="min-h-[200px]"
     >
-      <TaskComponent
-        v-for="task in column.tasks" 
-        :key="task.id"
-        :task="task"
-      />
+      <div v-show="column.tasks.length > 0">
+        <TaskComponent
+          v-for="task in column.tasks" 
+          :key="task.id"
+          :task="task"
+        />
+      </div>
+      <div v-show="column.tasks.length <= 0">
+        <div class="flex justify-center items-center h-full">
+          <p class="text-gray-500">Aucune tâche</p>
+        </div>
+      </div>
     </draggable>
   </div>
 </template>
@@ -24,6 +31,7 @@
 import { computed } from 'vue';
 import type { Column } from '../../types/todo';
 import TaskComponent from './Task.vue';
+import { useToast } from '../../composable/useToast';
 
 const props = defineProps<{
   column: Column,
@@ -31,10 +39,19 @@ const props = defineProps<{
   onChange: (event: any) => void
 }>();
 
+const { showToast } = useToast();
+
 const columnColor = computed(() => ({
   'bg-red-500': props.column.name === 'À faire',
   'bg-yellow-500': props.column.name === 'En cours',
   'bg-green-500': props.column.name === 'Terminé',
   'bg-gray-500': props.column.name === 'Archivé'
 }));
+
+const handleChange = (event: any) => {
+  props.onChange(event);
+  if (event.added) {
+    showToast(`Tâche déplacée dans "${props.column.name}"`, 'success');
+  }
+};
 </script> 
