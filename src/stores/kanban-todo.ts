@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import type { Column, Task } from "@/types/todo";
 import { useApiTodo } from "@/api/apiTodo";
 import { useAuthStore } from "@/stores/auth";
+import { TODO_STATUS } from "@/types/todo";
 
 export const useKanbanStore = defineStore(
   "kanban",
@@ -14,8 +15,8 @@ export const useKanbanStore = defineStore(
     const columns = ref<Column[]>([
       { name: "EN_ATTENTE", tasks: [] },
       { name: "EN_COURS", tasks: [] },
-      { name: "TERMINE", tasks: [] },
-      { name: "ARCHIVE", tasks: [] },
+      { name: "TERMINEE", tasks: [] },
+      { name: "ARCHIVEE", tasks: [] },
     ]);
 
     // Actions
@@ -128,12 +129,24 @@ export const useKanbanStore = defineStore(
       }
     };
 
+    const updateStatus = async (taskId: number, newStatus: TODO_STATUS): Promise<Task> => {
+      try {
+        const response = await apiTodo.updateStatus(taskId, newStatus);
+        if (!response?.success) throw new Error(response.message);
+
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    };
+
     return {
       columns,
       addTask,
       toggleTaskComplete,
       deleteTask,
       fetchTasks,
+      updateStatus,
     };
   },
   { persist: true }

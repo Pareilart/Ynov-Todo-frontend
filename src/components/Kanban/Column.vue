@@ -32,6 +32,10 @@ import { computed } from 'vue';
 import type { Column } from '../../types/todo';
 import TaskComponent from './Task.vue';
 import { useToast } from '../../composable/useToast';
+import { useKanbanStore } from '@/stores/kanban-todo';
+import { TODO_STATUS } from '@/types/todo';
+
+const kanbanStore = useKanbanStore();
 
 const props = defineProps<{
   column: Column,
@@ -44,14 +48,19 @@ const { showToast } = useToast();
 const columnColor = computed(() => ({
   'bg-red-500': props.column.name === 'EN_ATTENTE',
   'bg-yellow-500': props.column.name === 'EN_COURS',
-  'bg-green-500': props.column.name === 'TERMINE',
-  'bg-gray-500': props.column.name === 'ARCHIVE'
+  'bg-green-500': props.column.name === 'TERMINEE',
+  'bg-gray-500': props.column.name === 'ARCHIVEE'
 }));
 
-const handleChange = (event: any) => {
-  props.onChange(event);
-  if (event.added) {
-    showToast(`Tâche déplacée dans "${props.column.name}"`, 'success');
+const handleChange = async (event: any) => {
+  try {
+    console.log(props.column.name)
+    if (event.added) {
+      await kanbanStore.updateStatus(event.added.element.id, props.column.name as TODO_STATUS);
+      showToast(`Tâche déplacée dans "${props.column.name}"`, 'success');
+    }
+  } catch (error) {
+    console.error("Erreur lors du changement de statut :", error);
   }
 };
 </script> 

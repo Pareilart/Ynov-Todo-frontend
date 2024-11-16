@@ -2,6 +2,7 @@ import type { Task } from "@/types/todo";
 import { useApi } from "@/composable/useApi";
 import { useAuthStore } from "@/stores/auth";
 import type { ResponseApi } from "@/types/reponseApi";
+import { TODO_STATUS } from "@/types/todo";
 
 export const useApiTodo = () => {
   const authStore = useAuthStore();
@@ -84,10 +85,28 @@ export const useApiTodo = () => {
     }
   };
 
+  const updateStatus = async (
+    taskId: number,
+    newStatus: TODO_STATUS
+  ): Promise<ResponseApi> => {
+    try {
+      if (!Object.values(TODO_STATUS).includes(newStatus))
+        throw new Error("Le nouveau statut est invalide");
+
+      const response = (await api.patch(`/api/todos/updateStatus/${taskId}`, {
+        status: newStatus,
+      })) as ResponseApi;
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return {
     fetchTodos,
     createTodo,
     toggleCompletion,
     deleteTodo,
+    updateStatus,
   };
 };
