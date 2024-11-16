@@ -45,9 +45,8 @@ const addTask = async (): Promise<void> => {
     showToast('Veuillez remplir tous les champs', 'error');
     return;
   }
-  const result = await kanbanStore.apiPostCreateTodo({
+  const result = await kanbanStore.addTask(selectedColumn.value.name, {
     title: newTask.value,
-    status: selectedColumn.value.name,
   })
   if (result) {
     showToast('Tâche ajoutée avec succès', 'success');
@@ -58,21 +57,8 @@ const addTask = async (): Promise<void> => {
 };
 
 onMounted(async () => {
-  try {
-    const tasks = await kanbanStore.fetchTodos()
-    if (tasks && tasks.length > 0) {
-      tasks.forEach(task => {
-        kanbanStore.addTask(task.status, {
-          id: task.id,
-          title: task.title,
-          status: task.status,
-          completed: task.completed,
-          createdAt: task.createdAt,
-          userId: task.userId
-        })
-      })
-    }
-  } catch (error) {
+  const success = await kanbanStore.fetchTasks()
+  if (!success) {
     showToast('Erreur lors du chargement des tâches', 'error')
   }
 })

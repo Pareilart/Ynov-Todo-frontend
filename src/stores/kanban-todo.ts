@@ -1,14 +1,14 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 import type { Column, Task } from "@/types/todo";
-import { useApi } from "@/composable/useApi";
+import { useApiTodo } from "@/api/apiTodo";
 import { useAuthStore } from "@/stores/auth";
 
 export const useKanbanStore = defineStore(
   "kanban",
   () => {
     const authStore = useAuthStore();
-    const api = useApi({ authToken: authStore.data?.token });
+    const apiTodo = useApiTodo();
 
     // État
     const columns = ref<Column[]>([
@@ -19,147 +19,121 @@ export const useKanbanStore = defineStore(
     ]);
 
     // Actions
-    const addTask = (columnName: string, task: Partial<Task>) => {
-      if (!task.title?.trim() || !authStore.data?.user?.id) return;
+    const addTask = async (
+      columnName: string,
+      task: Partial<Task>
+    ): Promise<Task | null> => {
+      const title = task.title?.trim();
 
-      const userId = authStore.data.user.id;
-      const title = task.title.trim();
+      if (!title)
+        throw new Error("Le titre de la tâche ne peut pas être vide.");
+
       const column = columns.value.find((col) => col.name === columnName);
-
-      if (!column) return;
+      if (!column)
+        throw new Error(
+          `La colonne "${columnName}" est introuvable. Assurez-vous que le nom de la colonne est correct.`
+        );
 
       if (
         task.id &&
         columns.value.some((col) => col.tasks.some((t) => t.id === task.id))
+      ) {
+        return null;
+      }
+
+      try {
+        const newTask = await apiTodo.createTodo({
+          title,
+          status: columnName,
+        });
+
+        if (!newTask?.success) throw new Error(newTask.message);
+
+        column.tasks.push(newTask.data);
+        return newTask.data;
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    const toggleTaskComplete = async (taskId: number): Promise<Task> => {
+      // Recherche de la tâche
+      const currentTask = columns.value
+        .flatMap((column) => column.tasks)
+        .find((task) => task.id === taskId);
+
+      if (!currentTask) throw new Error("Tâche introuvable.");
+
+      try {
+        const currentTaskData = await apiTodo.toggleCompletion(taskId);
+        if (!currentTaskData?.success) throw new Error(currentTaskData.message);
+        return currentTaskData.data;
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    const deleteTask = async (taskId: number): Promise<void> => {
+      if (
+        !(authStore.hasPermission("delete:todos") && authStore.hasRole("ADMIN"))
       )
+        throw new Error(
+          "Vous n'avez pas les permissions pour supprimer une tâche"
+        );
+
+      try {
+        const columnWithTask = columns.value.find((column) =>
+          column.tasks.some((task) => task.id === taskId)
+        );
+
+        if (!columnWithTask) throw new Error("Tâche introuvable.");
+
+        const response = await apiTodo.deleteTodo(taskId);
+        if (!response?.success) throw new Error(response.message);
+
+        columnWithTask.tasks = columnWithTask.tasks.filter(
+          (task) => task.id !== taskId
+        );
+
         return;
-
-      const newTask: Task = {
-        id: task.id ?? Date.now(),
-        title,
-        status: columnName,
-        completed: task.completed ?? false,
-        createdAt: task.createdAt ?? new Date().toISOString(),
-        userId,
-      };
-
-      column.tasks.push(newTask);
-    };
-
-    const toggleTaskComplete = (taskId: number): void => {
-      columns.value.forEach((column) => {
-        const task = column.tasks.find((t) => t.id === taskId);
-        if (task) {
-          task.completed = !task.completed;
-        }
-      });
-    };
-
-    const deleteTask = (taskId: number): void => {
-      columns.value.forEach((column) => {
-        const taskIndex = column.tasks.findIndex((t) => t.id === taskId);
-        if (taskIndex !== -1) {
-          column.tasks.splice(taskIndex, 1);
-        }
-      });
-    };
-
-    // Nouvelle action pour récupérer les todos
-    const fetchTodos = async (): Promise<Task[]> => {
-      try {
-        const { data, success } = (await api.get("/api/todos")) as {
-          data: Task[];
-          success: boolean;
-        };
-
-        return success ? data : [];
       } catch (error) {
+        console.error("Erreur lors de la suppression de la tâche:", error);
         throw error;
       }
     };
 
-    // Nouvelle action pour créer un todo
-    const apiPostCreateTodo = async (task: Partial<Task>): Promise<Task> => {
+    const fetchTasks = async (): Promise<boolean> => {
       try {
-        const response = await api.post("/api/todos/create", task);
-        const { data, success } = response as { data: Task; success: boolean };
+        const todos = await apiTodo.fetchTodos();
+        if (todos?.success && todos.data) {
+          // Réinitialiser les tâches dans les colonnes
+          columns.value.forEach((column) => {
+            column.tasks = [];
+          });
 
-        if (success && data) {
-          addTask(data.status, data);
-          return data;
+          // Ajouter les tâches aux bonnes colonnes en fonction de leur statut
+          todos.data.forEach((task: Task) => {
+            const column = columns.value.find(
+              (col) => col.name === task.status
+            );
+            if (column) {
+              column.tasks.push(task);
+            }
+          });
         }
-
-        throw new Error("Échec de la création de la tâche");
+        return true;
       } catch (error) {
-        console.error("Erreur lors de la création du todo:", error);
-        throw error;
+        console.error("Erreur lors du chargement des tâches:", error);
+        return false;
       }
     };
-
-    const apiPatchToggleCompletion = async (
-      taskId: number
-    ): Promise<Task | null> => {
-      try {
-        const currentTask = columns.value
-          .flatMap((column) => column.tasks)
-          .find((task) => task.id === taskId);
-        if (!currentTask) return null;
-
-        const response = await api.patch(
-          `/api/todos/toggle-completion/${taskId}`
-        ) as { data: Task | null; success: boolean; message?: string };
-
-        if (!response.success) {
-          throw new Error(response.message || "Erreur lors du basculement de l'état de complétion");
-        }
-
-        if (!response.data) {
-          throw new Error("Données de tâche manquantes dans la réponse");
-        }
-
-        currentTask.completed = response.data.completed;
-        toggleTaskComplete(taskId);
-        return response.data;
-      } catch (error) {
-        console.error("Erreur lors de la mise à jour de la tâche:", error);
-        throw error;
-      }
-    };
-
-    const apiDeleteTask = async (taskId: number): Promise<{ data: Task; message: string; success: boolean }> => {
-      try {
-        if(!authStore.hasPermission('delete:todos')) {
-          throw new Error("Vous n'avez pas les permissions pour supprimer une tâche");
-        }
-
-        const response = await api.delete(`/api/todos/delete/${taskId}`) as { data: Task; message: string; success: boolean };
-
-        if (!response.success) {
-          throw new Error("Erreur lors de la suppression de la tâche");
-        }
-
-        deleteTask(taskId);
-        return response;
-      } catch (error) {
-        throw error;
-      }
-    };
-
-    // Getters
-    const getColumnByName = computed(() => {
-      return (name: string) => columns.value.find((col) => col.name === name);
-    });
 
     return {
       columns,
       addTask,
       toggleTaskComplete,
-      getColumnByName,
       deleteTask,
-      fetchTodos,
-      apiPostCreateTodo,
-      apiPatchToggleCompletion,
-      apiDeleteTask,
+      fetchTasks,
     };
   },
   { persist: true }

@@ -47,7 +47,7 @@ const canDeleteTask = computed(() => {
 
 const handleTaskToggle = async () => {
   try {
-    const task = await kanbanStore.apiPatchToggleCompletion(props.task.id);
+    const task = await kanbanStore.toggleTaskComplete(props.task.id);
     showToast(
       task?.completed ? 'Tâche marquée comme terminée' : 'Tâche marquée comme non terminée',
       'success'
@@ -62,7 +62,7 @@ const handleTaskToggle = async () => {
 
 const handleTaskDelete = async () => {
   try {
-    await kanbanStore.apiDeleteTask(props.task.id);
+    await kanbanStore.deleteTask(props.task.id);
     showToast('Tâche supprimée', 'warning');
   } catch (error) {
     showToast(error instanceof Error ? error.message : 'Erreur lors de la suppression de la tâche', 'error');
