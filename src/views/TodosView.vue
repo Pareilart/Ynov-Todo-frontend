@@ -1,9 +1,7 @@
 <template>
-  <div class="max-w-6xl mx-auto p-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Gestionnaire de Tâches</h1>
-
+  <AuthLayout title="Tableau de bord">
     <!-- Formulaire de création -->
-    <div class="mb-8 p-6 bg-white rounded-xl">
+    <div class="mb-8 p-6 bg-white rounded-xl shadow-sm">
       <div class="flex flex-col sm:flex-row gap-4">
         <input v-model="newTask" type="text" placeholder="Nouvelle tâche"
           class="flex-1 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
@@ -21,10 +19,12 @@
         </button>
       </div>
     </div>
-    {{ kanbanStore.columns }}
 
-    <KanbanComponent :columns="kanbanStore.columns" />
-  </div>
+    <!-- Kanban board -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <KanbanComponent :columns="kanbanStore.columns" />
+    </div>
+  </AuthLayout>
 </template>
 
 <script setup lang="ts">
@@ -33,6 +33,7 @@ import type { Column } from '@/types/todo';
 import KanbanComponent from '@/components/Kanban/Kanban.vue'
 import { useKanbanStore } from '@/stores/kanban-todo'
 import { useToast } from '@/composable/useToast'
+import AuthLayout from '@/layouts/AuthLayout.vue'
 
 const kanbanStore = useKanbanStore()
 const { showToast } = useToast()

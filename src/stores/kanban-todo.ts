@@ -126,6 +126,25 @@ export const useKanbanStore = defineStore(
       }
     };
 
+    const apiDeleteTask = async (taskId: number): Promise<{ data: Task; message: string; success: boolean }> => {
+      try {
+        if(!authStore.hasPermission('delete:todos')) {
+          throw new Error("Vous n'avez pas les permissions pour supprimer une tâche");
+        }
+
+        const response = await api.delete(`/api/todos/delete/${taskId}`) as { data: Task; message: string; success: boolean };
+
+        if (!response.success) {
+          throw new Error("Erreur lors de la suppression de la tâche");
+        }
+
+        deleteTask(taskId);
+        return response;
+      } catch (error) {
+        throw error;
+      }
+    };
+
     // Getters
     const getColumnByName = computed(() => {
       return (name: string) => columns.value.find((col) => col.name === name);
@@ -140,6 +159,7 @@ export const useKanbanStore = defineStore(
       fetchTodos,
       apiPostCreateTodo,
       apiPatchToggleCompletion,
+      apiDeleteTask,
     };
   },
   { persist: true }

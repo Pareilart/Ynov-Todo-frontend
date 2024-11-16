@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import TodosView from '../views/TodosView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
+import UsersView from '../views/UsersView.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
@@ -25,12 +26,22 @@ const router = createRouter({
       component: RegisterView,
       meta: { requiresAuth: false },
     },
+    {
+      path: '/users',
+      name: 'users',
+      component: UsersView,
+      meta: { 
+        requiresAuth: true,
+        requiresAdmin: true 
+      },
+    },
   ],
 })
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthRequired = to.meta.requiresAuth;
+  const isAdminRequired = to.meta.requiresAdmin;
   const isLoggedIn = authStore.checkAuth();
 
   if (isLoggedIn && ['login', 'register'].includes(to.name as string)) {
@@ -39,6 +50,10 @@ router.beforeEach((to, from, next) => {
 
   if (isAuthRequired && !isLoggedIn) {
     return next('/login');
+  }
+
+  if (isAdminRequired && !authStore.hasRole('ADMIN')) {
+    return next('/');
   }
 
   next();

@@ -60,8 +60,12 @@ const handleTaskToggle = async () => {
   }
 };
 
-const handleTaskDelete = () => {
-  kanbanStore.deleteTask(props.task.id);
-  showToast('Tâche supprimée', 'warning');
+const handleTaskDelete = async () => {
+  try {
+    await kanbanStore.apiDeleteTask(props.task.id);
+    showToast('Tâche supprimée', 'warning');
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : 'Erreur lors de la suppression de la tâche', 'error');
+  }
 };
 </script> 
