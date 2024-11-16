@@ -88,7 +88,33 @@ export const useAuthStore = defineStore(
       return true;
     };
 
-    return { data, login, logout, checkAuth, signup };
+    const hasPermission = (permissionName: string): boolean => {
+      if (!data.value?.token) return false;
+
+      try {
+        const payload = JSON.parse(atob(data.value.token.split(".")[1]));
+        return payload.roles.some((role: any) => 
+          role.permissions.some((permission: any) => 
+            permission.name === permissionName
+          )
+        );
+      } catch {
+        return false;
+      }
+    };
+
+    const hasRole = (roleName: string): boolean => {
+      if (!data.value?.token) return false;
+
+      try {
+        const payload = JSON.parse(atob(data.value.token.split(".")[1]));
+        return payload.roles.some((role: any) => role.name === roleName);
+      } catch {
+        return false;
+      }
+    };
+
+    return { data, login, logout, checkAuth, signup, hasPermission, hasRole };
   },
   { persist: true }
 );

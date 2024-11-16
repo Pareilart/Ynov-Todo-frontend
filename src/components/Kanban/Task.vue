@@ -16,6 +16,7 @@
       {{ task.title }}
     </span>
     <button 
+      v-if="canDeleteTask"
       @click.stop="handleTaskDelete"
       class="ml-auto text-red-500 hover:text-red-700"
     >
@@ -26,10 +27,13 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { Task } from '@/types/todo';
 import { useKanbanStore } from '@/stores/kanban-todo';
 import { useToast } from '@/composable/useToast';
+import { useAuthStore } from '@/stores/auth';
 
+const authStore = useAuthStore();
 const kanbanStore = useKanbanStore();
 const { showToast } = useToast();
 
@@ -37,13 +41,23 @@ const props = defineProps<{
   task: Task
 }>();
 
+const canDeleteTask = computed(() => {
+  return authStore.hasPermission('delete:todos') && authStore.hasRole('ADMIN');
+});
+
 const handleTaskToggle = async () => {
-  const task = await kanbanStore.apiPatchToggleCompletion(props.task.id);
-  console.log(task);
-  showToast(
-    task?.completed ? 'Tâche marquée comme terminée' : 'Tâche marquée comme non terminée',
-    'success'
-  );
+  try {
+    const task = await kanbanStore.apiPatchToggleCompletion(props.task.id);
+    showToast(
+      task?.completed ? 'Tâche marquée comme terminée' : 'Tâche marquée comme non terminée',
+      'success'
+    );
+  } catch (error) {
+    showToast(
+      error instanceof Error ? error.message : 'Erreur lors de la mise à jour de la tâche',
+      'error'
+    );
+  }
 };
 
 const handleTaskDelete = () => {

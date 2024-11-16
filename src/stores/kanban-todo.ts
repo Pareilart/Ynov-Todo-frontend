@@ -105,17 +105,23 @@ export const useKanbanStore = defineStore(
           .find((task) => task.id === taskId);
         if (!currentTask) return null;
 
-        const { data, success } = (await api.patch(
+        const response = await api.patch(
           `/api/todos/toggle-completion/${taskId}`
-        )) as { data: Task; success: boolean };
+        ) as { data: Task | null; success: boolean; message?: string };
 
-        if (!success)
-          throw new Error("Erreur lors du basculement de l'état de complétion");
+        if (!response.success) {
+          throw new Error(response.message || "Erreur lors du basculement de l'état de complétion");
+        }
 
-        currentTask.completed = data.completed;
+        if (!response.data) {
+          throw new Error("Données de tâche manquantes dans la réponse");
+        }
+
+        currentTask.completed = response.data.completed;
         toggleTaskComplete(taskId);
-        return data;
+        return response.data;
       } catch (error) {
+        console.error("Erreur lors de la mise à jour de la tâche:", error);
         throw error;
       }
     };
