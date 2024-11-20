@@ -19,13 +19,14 @@ import {
     faXmark,
     faPlus,
     faTrash,
-    faRightFromBracket
+    faRightFromBracket,
+    faEye
 } from '@fortawesome/free-solid-svg-icons'
 
 const app = createApp(App)
 
 /* Ajout des icônes à la bibliothèque */
-library.add(faCircleCheck, faCircleXmark, faTriangleExclamation, faCircleInfo, faXmark, faPlus, faTrash, faRightFromBracket)
+library.add(faCircleCheck, faCircleXmark, faTriangleExclamation, faCircleInfo, faXmark, faPlus, faTrash, faRightFromBracket, faEye)
 /* Enregistrement du composant Font Awesome */
 app.component('font-awesome-icon', FontAwesomeIcon)
 

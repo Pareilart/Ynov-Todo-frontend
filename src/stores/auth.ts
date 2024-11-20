@@ -30,9 +30,12 @@ export const useAuthStore = defineStore(
           password,
         })) as ResponseApi;
 
-        if (success && responseData) {
-          data.value = responseData as User;
+        if(!success || !responseData) {
+          throw new Error(message)
         }
+        console.log(responseData)
+
+        data.value = responseData as User;
 
         return { success, message };
       } catch (error) {

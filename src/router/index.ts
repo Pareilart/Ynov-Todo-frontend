@@ -2,8 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import TodosView from '../views/TodosView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
-import UsersView from '../views/UsersView.vue'
-import { useAuthStore } from '@/stores/auth'
+import UsersView from '../views/Admin/UsersView.vue'
+import UserTodosView from '../views/Admin/UserTodosView.vue'
+import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,7 +28,7 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
-      path: '/users',
+      path: '/admin/users',
       name: 'users',
       component: UsersView,
       meta: { 
@@ -35,6 +36,15 @@ const router = createRouter({
         requiresAdmin: true 
       },
     },
+    {
+      path: '/admin/users/:userId/todos',
+      name: 'user-todos',
+      component: UserTodosView,
+      meta: { 
+        requiresAuth: true,
+        requiresAdmin: true
+      },
+    }
   ],
 })
 
