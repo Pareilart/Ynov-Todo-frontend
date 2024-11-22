@@ -7,10 +7,12 @@
 </template>
 
 <script setup lang="ts">
+import { ref, type Ref } from 'vue';
 import Toast from '@/components/Toast/Toast.vue';
 import { useToast } from '@/composable/useToast';
+import type { ToastInterface } from '@/types/toast';
 
-const { toasts } = useToast();
+const { toasts } = useToast() as { toasts: Ref<ToastInterface[]> };
 </script>
 
 <style scoped>

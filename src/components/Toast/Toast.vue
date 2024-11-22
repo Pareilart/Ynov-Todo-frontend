@@ -18,66 +18,71 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 
-interface Props {
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+interface ToastProps {
   message: string;
-  type?: 'success' | 'error' | 'info' | 'warning';
-  duration?: number;
+  type: ToastType;
+  duration: number;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<ToastProps>(), {
   type: 'success',
   duration: 2000
 });
 
-const isVisible = ref(true);
+const isVisible = ref < boolean > (true);
 
-// Afficher la notification lorsqu'un nouveau message arrive
-watch(
-  () => props.message,
-  (newMessage) => {
-    if (newMessage) {
-      isVisible.value = true;
-      setTimeout(() => {
-        isVisible.value = false;
-      }, props.duration);
-    }
+const emit = defineEmits<{
+  (e: 'remove'): void
+}>();
+
+// Show toast when the message changes
+watch(() => props.message, (newMessage) => {
+  if (newMessage) {
+    isVisible.value = true;
+    setTimeout(() => {
+      isVisible.value = false;
+      emit('remove');
+    }, props.duration);
   }
-);
+});
 
 const close = () => {
   isVisible.value = false;
+  emit('remove');
 };
 
-const iconClasses = computed(() => {
+const iconClasses = computed((): string => {
   const baseClasses = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg';
-  const typeClasses: Record<'success' | 'error' | 'warning' | 'info', string> = {
+  const typeClasses: Record<ToastType, string> = {
     success: 'text-green-500 bg-green-100',
     error: 'text-red-500 bg-red-100',
     warning: 'text-orange-500 bg-orange-100',
     info: 'text-blue-500 bg-blue-100',
   };
-  return `${baseClasses} ${typeClasses[props.type || 'success']}`;
+  return `${baseClasses} ${typeClasses[props.type]}`;
 });
 
-const iconClass = computed(() => {
-  const icons: Record<'success' | 'error' | 'warning' | 'info', string[]> = {
+const iconClass = computed((): [string, string] => {
+  const icons: Record<ToastType, [string, string]> = {
     success: ['fas', 'circle-check'],
     error: ['fas', 'circle-xmark'],
     warning: ['fas', 'triangle-exclamation'],
     info: ['fas', 'circle-info'],
   };
-  return icons[props.type || 'success'];
+  return icons[props.type];
 });
 
-const iconLabel = computed(() => {
-  const labels: Record<'success' | 'error' | 'warning' | 'info', string> = {
+const iconLabel = computed((): string => {
+  const labels: Record<ToastType, string> = {
     success: 'Icône de succès',
     error: 'Icône d\'erreur',
     warning: 'Icône d\'avertissement',
     info: 'Icône d\'information',
   };
-  return labels[props.type || 'success'];
+  return labels[props.type];
 });
 
-const closeLabel = computed(() => 'Fermer');
+const closeLabel = computed((): string => 'Fermer');
 </script>
