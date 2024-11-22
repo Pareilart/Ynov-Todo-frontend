@@ -9,7 +9,8 @@ export const useToast = () => {
     type: Toast['type'] = 'success', 
     duration: number = 5000
   ) => {
-    toasts.value.push({ message, type, duration })
+    const id = Date.now().toString()
+    toasts.value.push({ id, message, type, duration })
 
     setTimeout(() => {
       toasts.value.shift()

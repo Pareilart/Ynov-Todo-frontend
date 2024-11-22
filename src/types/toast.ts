@@ -1,7 +1,7 @@
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
-export interface ToastInterface {
-  id: string | number;
+export interface Toast {
+  id: string;
   message: string;
   type: ToastType;
   duration: number;
